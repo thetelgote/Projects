@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AWS Rekognition - Image Labels</title>
+</head>
+<body>
+  <h2>🖼️ Upload Image to Detect Labels</h2>
+
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="image" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <% if (imagePath) { %>
+    <hr />
+    <h3>Uploaded Image:</h3>
+    <img src="<%= imagePath %>" width="300" />
+  <% } %>
+
+  <% if (labels) { %>
+    <h3>🔍 Detected Labels:</h3>
+    <ul>
+      <% labels.forEach(label => { %>
+        <li><strong><%= label.Name %></strong> - <%= label.Confidence %>%</li>
+      <% }) %>
+    </ul>
+  <% } %>
+</body>
+</html>
