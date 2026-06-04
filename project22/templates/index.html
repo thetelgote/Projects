@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- Background Waves -->
+<div class="wave"></div>
+<div class="wave wave2"></div>
+
+<h1>🚀 System Health Monitor</h1>
+
+<div id="status" class="status healthy">Status: Healthy</div>
+
+<div class="dashboard">
+
+    <div class="card">
+        <h3>CPU</h3>
+        <div id="cpu" class="value">0%</div>
+    </div>
+
+    <div class="card">
+        <h3>Memory</h3>
+        <div id="memory" class="value">0%</div>
+    </div>
+
+    <div class="card">
+        <h3>Disk</h3>
+        <div id="disk" class="value">0%</div>
+    </div>
+
+    <div class="card">
+        <h3>Processes</h3>
+        <div id="processes" class="value">0</div>
+    </div>
+
+    <div class="card">
+        <h3>Network Sent</h3>
+        <div id="net_sent" class="value">0</div>
+    </div>
+
+    <div class="card">
+        <h3>Network Recv</h3>
+        <div id="net_recv" class="value">0</div>
+    </div>
+
+    <div class="card">
+        <h3>Uptime</h3>
+        <div id="uptime" class="value">0</div>
+    </div>
+
+    <div class="card">
+        <h3>System</h3>
+        <div id="system" class="value">-</div>
+    </div>
+
+    <div class="card">
+        <h3>CPU Temp</h3>
+        <div id="temp" class="value">-</div>
+    </div>
+
+</div>
+
+<!-- ALERTS -->
+<div id="alerts" class="alert-box" style="display:none;"></div>
+
+<!-- HISTORY -->
+<div class="history">
+    <h3>📜 Alert History</h3>
+    <div id="history"></div>
+</div>
+
+<script>
+
+let prevAlerts = 0;
+
+async function fetchData() {
+
+    const res = await fetch('/health');
+    const result = await res.json();
+
+    let d = result.data;
+
+    setVal("cpu", d.cpu);
+    setVal("memory", d.memory);
+    setVal("disk", d.disk);
+
+    document.getElementById("processes").innerText = d.processes;
+    document.getElementById("net_sent").innerText = d.net_sent;
+    document.getElementById("net_recv").innerText = d.net_recv;
+    document.getElementById("uptime").innerText = d.uptime;
+    document.getElementById("system").innerText = d.system;
+    document.getElementById("temp").innerText = d.cpu_temp ?? "N/A";
+
+    // STATUS
+    let s = document.getElementById("status");
+
+    s.innerText = "Status: " + result.status;
+    s.className = "status " + result.status.toLowerCase();
+
+    // ALERTS
+    let alertBox = document.getElementById("alerts");
+
+    alertBox.innerHTML = "";
+
+    if(result.alerts && result.alerts.length > 0){
+
+        alertBox.style.display = "block";
+
+        result.alerts.forEach(alert => {
+
+            alertBox.innerHTML += `
+                <div class="alert-item">
+                    ⚠️ ${alert}
+                </div>
+            `;
+        });
+
+        prevAlerts = result.alerts.length;
+
+    } else {
+
+        alertBox.style.display = "none";
+        prevAlerts = 0;
+    }
+
+    // HISTORY
+    let hist = document.getElementById("history");
+
+    hist.innerHTML = "";
+
+    result.history.forEach(h => {
+
+        hist.innerHTML += `
+            <div class="history-item">
+                ${h.time} - ${h.message}
+            </div>
+        `;
+    });
+}
+
+function setVal(id, val){
+
+    let el = document.getElementById(id);
+
+    el.innerText = val + "%";
+
+    el.className = "value";
+
+    if(val < 50){
+        el.classList.add("low");
+    }
+    else if(val < 80){
+        el.classList.add("medium");
+    }
+    else{
+        el.classList.add("high");
+    }
+}
+
+setInterval(fetchData, 2000);
+
+fetchData();
+
+</script>
+
+</body>
+</html>
